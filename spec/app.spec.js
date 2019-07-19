@@ -2,18 +2,17 @@ process.env.NODE_ENV = 'test';
 const connection = require('../db/connection');
 const chai = require('chai');
 const { expect } = chai;
-chai.use(require('chai-sorted')); //testing if an array has sorted values (strings, numbers, booleans)
+chai.use(require('chai-sorted'));
 const app = require('../app.js');
 const request = require('supertest');
 
 //refactor at the end using nested describe blocks to group the methods together and build the functionality as we go
 
 describe('/*', () => {
-  //Mocha Hooks - before, beforeEach and after - used to set up preconditions and clean up after your tests
   after(() => connection.destroy()); //
   beforeEach(() => connection.seed.run()); //
 
-  it('GET status 404 for a wrong route', () => { //no endpoint available for this url
+  it('GET status 404 for a wrong route', () => {
     return request(app) //it makes a dummy connection to the server
       .get('/wrongroute')
       .expect(404)
@@ -34,17 +33,6 @@ describe('/*', () => {
         });
     });
   });
-  // describe('Invalid Methods', () => {
-  //   it('Returns status 405', () => {
-  //     const invalidMethods = ['patch', 'put', 'delete'];
-  //     const methodPromises = invalidMethods.map((method) => {
-  //       return request(app)
-  //       [method]('/api/topics') //`request.patch('/api/topics')` is equivalent to `request[method]('/api/topics')`
-  //         .expect(405)
-  //     });
-  //     return Promise.all(methodPromises);
-  //   });
-  // });
 
   describe('/users', () => {
     describe('/users/:username', () => {
@@ -65,17 +53,6 @@ describe('/*', () => {
             expect(body.msg).to.equal('User not found');
           });
       });
-      // describe('Invalid Methods', () => {
-      //   it('Returns status 405', () => {
-      //     const invalidMethods = ['patch', 'put', 'delete'];
-      //     const methodPromises = invalidMethods.map((method) => {
-      //       return request(app)
-      //       [method]('/api/users/lurker')
-      //         .expect(405)
-      //     });
-      //     return Promise.all(methodPromises);
-      //   });
-      // });
     });
   });
 
@@ -100,18 +77,18 @@ describe('/*', () => {
       });
       it('GET returns an article object with all the keys', () => {
         return request(app)
-          .get("/api/articles/2")
+          .get('/api/articles/2')
           .expect(200)
-          .then(({ body: { article } }) => {
-            expect(article).to.have.all.keys(
-              "author",
-              "title",
-              "article_id",
-              "topic",
-              "body",
-              "created_at",
-              "votes",
-              "comment_count"
+          .then(({ body }) => {
+            expect(body.article).to.have.all.keys(
+              'author',
+              'title',
+              'article_id',
+              'topic',
+              'body',
+              'created_at',
+              'votes',
+              'comment_count'
             );
           });
       });
@@ -119,8 +96,8 @@ describe('/*', () => {
         return request(app)
           .get('/api/articles/1000')
           .expect(404)
-          .then(({ body: { msg } }) => {
-            expect(msg).to.eql('Article not found.');
+          .then(({ body }) => {
+            expect(body.msg).to.eql('Article not found.');
           });
       });
       it('GET ERROR status 400 if the article id is wrong', () => {
@@ -128,65 +105,53 @@ describe('/*', () => {
           .get('/api/articles/salt-n-pepa')
           .expect(400)
           .then(({ body }) => {
-            expect(body.msg).eql('Invalid article_ID');
+            expect(body.msg).eql('Invalid Entry');
           });
       });
 
-      it("PATCH returns 200 and the updated article", () => {
+      it('PATCH returns 200 and the updated article', () => {
         return request(app)
-          .patch("/api/articles/2")
-          .send({ inc_votes: 1 })
+          .patch('/api/articles/2')
+          .send({ points: 1 })
           .expect(200)
           .then(({ body }) => {
-            expect(body.article).to.have.all.keys(
-              "author",
-              "title",
-              "article_id",
-              "topic",
-              "body",
-              "created_at",
-              "votes"
+            expect(body.article[0]).to.contain.keys(
+              'author',
+              'title',
+              'article_id',
+              'topic',
+              'body',
+              'created_at',
+              'votes'
             );
           });
       });
-
       it('PATCH ERROR returns 404 for an non-existing article ', () => {
         return request(app)
-          .patch("/api/articles/100")
-          .send({ inc_votes: 1 })
+          .patch('/api/articles/100')
+          .send({ points: 1 })
           .expect(404)
           .then(({ body }) => {
-            expect(body.msg).to.eql("No article found for article_id: 100");
+            expect(body.msg).to.eql('Article_id: 100 not found');
           });
       });
-      it("PATCH ERROR returns 400 if article_id is wrong", () => {
+      it('PATCH ERROR returns 400 if article_id is wrong', () => {
         return request(app)
-          .patch("/api/articles/banana")
-          .send({ inc_votes: 1 })
+          .patch('/api/articles/banana')
+          .send({ points: 1 })
           .expect(400)
           .then(({ body }) => {
-            expect(body.msg).eql("Invalid article_ID");
+            expect(body.msg).eql('Invalid Entry');
           });
       });
-      it("PATCH ERROR returns 400 if there is a missing request", () => {
+      it('PATCH ERROR returns 400 if there is a missing request', () => {
         return request(app)
-          .patch("/api/articles/1")
+          .patch('/api/articles/1')
           .expect(400)
           .then(({ body }) => {
-            expect(body.msg).eql("Missing Request");
+            expect(body.msg).eql('Bad Request');
           });
       });
-      // describe('Invalid Methods', () => {
-      //   it('Returns status 405', () => {
-      //     const invalidMethods = ['post', 'put', 'delete'];
-      //     const methodPromises = invalidMethods.map((method) => {
-      //       return request(app)
-      //       [method]('/api/articles/2')
-      //         .expect(405)
-      //     });
-      //     return Promise.all(methodPromises);
-      //   });
-      // });
 
     });
     describe('/comments', () => {
@@ -200,12 +165,12 @@ describe('/*', () => {
           .expect(201)
           .then(({ body }) => {
             expect(body.comment[0]).to.have.all.keys(
-              "article_id",
-              "author",
-              "body",
-              "comment_id",
-              "created_at",
-              "votes"
+              'article_id',
+              'author',
+              'body',
+              'comment_id',
+              'created_at',
+              'votes'
             );
           });
       });
@@ -218,7 +183,7 @@ describe('/*', () => {
           })
           .expect(404)
           .then(({ body }) => {
-            expect(body.msg).to.equal('Article_ID not found');
+            expect(body.msg).to.equal('Input not found');
           })
       });
       it('POST ERROR returns 400 when commenting on an article with a wrong format', () => {
@@ -230,10 +195,182 @@ describe('/*', () => {
           })
           .expect(400)
           .then(({ body }) => {
-            expect(body.msg).to.equal('Invalid article_ID');
+            expect(body.msg).to.equal('Invalid Entry');
           })
       });
 
+      it('POST ERROR returns 400 when commenting on an article with a correct path but wrong username', () => {
+        return request(app)
+          .post('/api/articles/1/comments')
+          .send({
+            username: 'theundertaker',
+            body: 'Im coming for you.'
+          })
+          .expect(404)
+          .then(({ body }) => {
+            expect(body.msg).to.equal('Input not found');
+          })
+      });
+
+      it('GET returns 200 and an empty array if the article has no comments', () => {
+        return request(app)
+          .get('/api/articles/2/comments')
+          .expect(200)
+          .then(({ body }) => {
+            expect(body.comments).to.eql([]);
+          });
+      });
+      it('GET returns 200 and an array sorted by created_at if no query is passed', () => {
+        return request(app)
+          .get('/api/articles/5/comments')
+          .expect(200)
+          .then(({ body }) => {
+            expect(body.comments).to.be.sortedBy('created_at', { descending: true });
+          });
+      });
+      it('GET returns 200 and an array sorted by a given variable if passed on as a query', () => {
+        return request(app)
+          .get('/api/articles/5/comments?sort_by=votes&order=asc')
+          .expect(200)
+          .then(({ body }) => {
+            expect(body.comments).to.be.sortedBy('votes', { descending: false });
+          });
+      });
+    });
+
+    describe('/api/articles', () => {
+      it('GET returns 200 and an array with the correct keys', () => {
+        return request(app)
+          .get('/api/articles')
+          .expect(200)
+          .then(({ body }) => {
+            expect(body.articles[0]).to.have.all.keys(
+              'author',
+              'title',
+              'article_id',
+              'topic',
+              'body',
+              'created_at',
+              'votes',
+              'comment_count'
+            );
+          });
+      });
+      it('GET returns 200 and an array of articles sorted in asc given order', () => {
+        return request(app)
+          .get('/api/articles?sort_by=votes&order=asc')
+          .expect(200)
+          .then(({ body }) => {
+            expect(body.articles).to.be.sortedBy('votes', { descending: false });
+          });
+      });
+      it('GET ERROR returns 400 when passed an invalid sort_by query', () => {
+        return request(app)
+          .get('/api/articles?sort_by=idwrong')
+          .expect(400)
+          .then(({ body }) => {
+            expect(body.msg).to.eql('Column Not Found');
+          });
+      });
+      it('GET ERROR returns 400 when passed an invalid order query', () => {
+        return request(app)
+          .get('/api/articles?order=worldsneworder')
+          .expect(400)
+          .then(({ body }) => {
+            expect(body.msg).to.eql('Invalid Order');
+          });
+      });
+      it('GET ERROR returns 400 and filter an author with no articles', () => {
+        return request(app)
+          .get('/api/articles?author=notexisting')
+          .expect(400)
+          .then(({ body }) => {
+            expect(body.msg).to.eql(
+              'Author does not exist'
+            );
+          });
+      });
+      it('GET ERROR returns 400 and filter a topic with no articles', () => {
+        return request(app)
+          .get('/api/articles?topic=notexisting')
+          .expect(400)
+          .then(({ body }) => {
+            expect(body.msg).to.eql(
+              'Topic does not exist'
+            );
+          });
+      });
+    });
+
+    describe('/api/comments/:comment_id', () => {
+      it('PATCH returns 200 and an updated comment', () => {
+        return request(app)
+          .patch('/api/comments/1')
+          .send({ points: 1 })
+          .expect(200)
+          .then(({ body }) => {
+            expect(body.comment[0]).to.have.all.keys(
+              'comment_id',
+              'author',
+              'article_id',
+              'votes',
+              'created_at',
+              'body'
+            );
+            expect(body.comment[0].votes).to.equal(17);
+          });
+      });
+      it('PATCH ERROR returns 400 if comment_id is wrong', () => {
+        return request(app)
+          .patch('/api/comments/banana')
+          .send({ points: 1 })
+          .expect(400)
+          .then(({ body }) => {
+            expect(body.msg).to.eql('Invalid Entry');
+          });
+      });
+      it('PATCH ERROR returns 404 if comment_id does not exist', () => {
+        return request(app)
+          .patch('/api/comments/100')
+          .send({ points: 1 })
+          .expect(404)
+          .then(({ body }) => {
+            expect(body.msg).to.eql('Comment_id: 100 not found');
+          });
+      });
+      it('PATCH ERROR returns 400 if there is no body on the request', () => {
+        return request(app)
+          .patch('/api/comments/1')
+          .expect(400)
+          .then(({ body }) => {
+            expect(body.msg).to.eql('Invalid Entry');
+          });
+      });
+
+      it('DELETE returns 204 and no content', () => {
+        return request(app)
+          .delete('/api/comments/1')
+          .expect(204)
+          .then(({ body }) => {
+            expect(body).to.eql({});
+          });
+      });
+      it('DELETE ERROR returns 404 if the comment_id does not exist', () => {
+        return request(app)
+          .delete('/api/comments/100')
+          .expect(404)
+          .then(({ body }) => {
+            expect(body.msg).to.eql('Comment_id: 100 not found');
+          });
+      });
+      it('DELETE ERROR returns 400 if the comment_id has a wrong format', () => {
+        return request(app)
+          .delete('/api/comments/invalidentry')
+          .expect(400)
+          .then(({ body: { msg } }) => {
+            expect(msg).to.eql('Invalid Entry');
+          });
+      });
     });
   });
 });

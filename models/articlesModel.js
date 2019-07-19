@@ -10,8 +10,7 @@ exports.fetchArticleById = article_id => {
     .where('articles.article_id', article_id)
     .then(article => {
       if (!article) {
-
-        return Promise.reject({//returns a Promise object that is rejected with a given reason
+        return Promise.reject({
           status: 404,
           msg: 'Article not found.'
         });
@@ -19,11 +18,49 @@ exports.fetchArticleById = article_id => {
     });
 };
 
-exports.updateArticle = (article_id, inc_votes) => {
+exports.updateArticle = (article_id, points) => {
   return connection
     .select('*')
     .from('articles')
     .where('article_id', article_id)
-    .increment('votes', inc_votes)
+    .increment('votes', points)
     .returning('*');
+};
+
+exports.selectAllArticles = (sort_by, order, author, topic) => {
+  return connection
+    .select(
+      'articles.author',
+      'articles.title',
+      'articles.article_id',
+      'articles.topic',
+      'articles.body',
+      'articles.created_at',
+      'articles.votes'
+    )
+    .from('articles')
+    .orderBy(sort_by, order)
+    .count('comment_id as comment_count')
+    .leftJoin('comments', 'articles.article_id', 'comments.article_id')
+    // ^ if doesnt have any comments return all articles
+    .groupBy('articles.article_id')
+    .modify(query => {
+      if (author) query.where({ 'articles.author': author });
+      if (topic) query.where({ topic });
+    })
+    .then(articles => {
+      if (!articles.length && author)
+        return Promise.reject({
+          status: 400,
+          msg:
+            'Author does not exist'
+        });
+      else if (!articles.length && topic)
+        return Promise.reject({
+          status: 400,
+          msg:
+            'Topic does not exist'
+        });
+      else return articles;
+    });
 };

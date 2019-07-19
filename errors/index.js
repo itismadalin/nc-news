@@ -11,18 +11,18 @@ exports.handleCustomErrors = (err, req, res, next) => {
 
 exports.handlePsqlErrors = (err, req, res, next) => {
   const psqlBadRequestCodes = {
-    "22P02": { status: 400, msg: "Invalid article_ID" },
-    "23503": { status: 404, msg: "Article_ID not found" },
-    "42703": { status: 400, msg: "Column does not exist" }
+    '22P02': { status: 400, msg: 'Invalid Entry' },
+    '23503': { status: 404, msg: 'Input not found' },
+    '42703': { status: 400, msg: 'Column Not Found' }
   };
   if (psqlBadRequestCodes[err.code])
     res
       .status(psqlBadRequestCodes[err.code].status)
-      .send({ msg: psqlBadRequestCodes[err.code].msg || "Bad Request" });
+      .send({ msg: psqlBadRequestCodes[err.code].msg || 'Bad Request' });
   else next(err);
 };
 
 exports.handleServerErrors = (err, req, res, next) => {
   console.log(err);
-  res.status(500).send({ msg: "Internal server error" });
+  res.status(500).send({ msg: 'Internal server error' });
 };

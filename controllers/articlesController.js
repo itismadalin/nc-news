@@ -6,25 +6,40 @@ exports.sendArticleById = (req, res, next) => {
     .then(article => {
       res.status(200).send({ article });
     })
-    .catch(err => next(err)); //here we can console.log the error to find out the psql codes
+    .catch(err => next(err));
 };
 
 exports.sendUpdatedArticle = (req, res, next) => {
   const { article_id } = req.params;
-  const { inc_votes } = req.body;
-  if (inc_votes === undefined) next({ status: 400, msg: "Missing Request" });
+  const { points } = req.body;
+  if (points === undefined) next({ status: 400, msg: 'Bad Request' });
+  else if (Object.keys(req.body).length > 1)
+    next({ status: 400, msg: 'Unexpected keys' });
   else {
-    updateArticle(article_id, inc_votes)
+    updateArticle(article_id, points)
       .then(article => {
         if (!article.length) {
           next({
             status: 404,
-            msg: `No article found for article_id: ${article_id}`
+            msg: `Article_id: ${article_id} not found`
           });
         } else {
-          res.status(200).send({ article: article[0] });
+          res.status(200).send({ article });
         }
       })
       .catch(next);
+  }
+};
+
+exports.sendAllArticles = (req, res, next) => {
+  const { sort_by = 'created_at', order = 'desc', author, topic } = req.query;
+  if (order === 'asc' || order === 'desc') {
+    selectAllArticles(sort_by, order, author, topic)
+      .then(articlesArray => {
+        res.status(200).send({ articles: articlesArray });
+      })
+      .catch(next);
+  } else {
+    next({ status: 400, msg: 'Invalid Order' });
   }
 };
