@@ -1,4 +1,4 @@
-  {
+{
   "name": "be-nc-news",
   "version": "1.0.0",
   "description": "bc-nc-news",
@@ -24,6 +24,7 @@
   },
   "homepage": "https://github.com/northcoders/be-nc-news#readme",
   "dependencies": {
+    "chai-sorted": "^0.2.0",
     "express": "^4.17.1",
     "knex": "^0.19.0",
     "lodash": "^4.17.14",
