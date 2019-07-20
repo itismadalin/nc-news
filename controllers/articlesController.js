@@ -17,9 +17,9 @@ exports.sendUpdatedArticle = (req, res, next) => {
     next({ status: 400, msg: 'Unexpected keys' });
   else {
     updateArticle(article_id, points)
-      .then(article => {
+      .then((article) => {
         if (!article.length) {
-          next({
+          next({article,
             status: 404,
             msg: `Article_id: ${article_id} not found`
           });

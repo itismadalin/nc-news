@@ -6,14 +6,13 @@ chai.use(require('chai-sorted'));
 const app = require('../app.js');
 const request = require('supertest');
 
-//refactor at the end using nested describe blocks to group the methods together and build the functionality as we go
 
 describe('/*', () => {
-  after(() => connection.destroy()); //
-  beforeEach(() => connection.seed.run()); //
+  after(() => connection.destroy());
+  beforeEach(() => connection.seed.run());
 
   it('GET status 404 for a wrong route', () => {
-    return request(app) //it makes a dummy connection to the server
+    return request(app)
       .get('/wrongroute')
       .expect(404)
       .then(({ body }) => {
@@ -22,7 +21,34 @@ describe('/*', () => {
       });
   });
 
+  describe('/api', () => {
+    it('Method not allowed: status 405', () => {
+      const invalidMethods = ['patch', 'put', 'post', 'del'];
+      const methodPromises = invalidMethods.map(method => {
+        return request(app)
+        [method]('/api')
+          .expect(405)
+          .then(({ body }) => {
+            expect(body.msg).to.equal('Method not allowed!');
+          });
+      });
+      return Promise.all(methodPromises);
+    });
+  });
+
   describe('/topics', () => {
+    it('Method not allowed: status 405 for /topics', () => {
+      const invalidMethods = ['patch', 'put', 'post', 'del'];
+      const methodPromises = invalidMethods.map(method => {
+        return request(app)
+        [method]('/api/topics')
+          .expect(405)
+          .then(({ body }) => {
+            expect(body.msg).to.equal('Method not allowed!');
+          });
+      });
+      return Promise.all(methodPromises);
+    });
     it('GET status 200, returns an array of topics objects', () => {
       return request(app)
         .get('/api/topics')
@@ -36,6 +62,18 @@ describe('/*', () => {
 
   describe('/users', () => {
     describe('/users/:username', () => {
+      it('Method not allowed: status 405 for /users/:username', () => {
+        const invalidMethods = ['patch', 'put', 'post', 'del'];
+        const methodPromises = invalidMethods.map(method => {
+          return request(app)
+          [method]('/api/users/rogersop')
+            .expect(405)
+            .then(({ body }) => {
+              expect(body.msg).to.equal('Method not allowed!');
+            });
+        });
+        return Promise.all(methodPromises);
+      });
       it('GET status 200, returns an user object by username', () => {
         return request(app)
           .get('/api/users/rogersop')
@@ -92,6 +130,18 @@ describe('/*', () => {
             );
           });
       });
+      it('Method not allowed: status 405 for /articles', () => {
+        const invalidMethods = ['patch', 'put', 'post', 'del'];
+        const methodPromises = invalidMethods.map(method => {
+          return request(app)
+          [method]('/api/articles')
+            .expect(405)
+            .then(({ body }) => {
+              expect(body.msg).to.equal('Method not allowed!');
+            });
+        });
+        return Promise.all(methodPromises);
+      });
       it('GET ERROR status 404 for an non-existing article', () => {
         return request(app)
           .get('/api/articles/1000')
@@ -108,7 +158,6 @@ describe('/*', () => {
             expect(body.msg).eql('Invalid Entry');
           });
       });
-
       it('PATCH returns 200 and the updated article', () => {
         return request(app)
           .patch('/api/articles/2')
@@ -154,7 +203,20 @@ describe('/*', () => {
       });
 
     });
+
     describe('/comments', () => {
+      it('Method not allowed: status 405 for /comments', () => {
+        const invalidMethods = ['get', 'put', 'post'];
+        const methodPromises = invalidMethods.map(method => {
+          return request(app)
+          [method]('/api/comments/1')
+            .expect(405)
+            .then(({ body }) => {
+              expect(body.msg).to.equal('Method not allowed!');
+            });
+        });
+        return Promise.all(methodPromises);
+      });
       it('POST respond with status 201 and a posted comment', () => {
         return request(app)
           .post('/api/articles/2/comments')
@@ -300,6 +362,22 @@ describe('/*', () => {
             );
           });
       });
+      it('GET ERROR status 404 for an non-existing author', () => {
+        return request(app)
+          .get('/api/articles?author=not-an-author')
+          .expect(404)
+          .then(({ body }) => {
+            expect(body.msg).to.eql('Author does not exist');
+          });
+      });
+      it('GET ERROR status 404 for an non-existing topic', () => {
+        return request(app)
+          .get('/api/articles/topic=not-a-topic')
+          .expect(404)
+          .then(({ body }) => {
+            expect(body.msg).to.eql('Topic does not exist');
+          });
+      });
     });
 
     describe('/api/comments/:comment_id', () => {
@@ -370,6 +448,18 @@ describe('/*', () => {
           .then(({ body: { msg } }) => {
             expect(msg).to.eql('Invalid Entry');
           });
+      });
+      it('Method not allowed: status 405 for /comments/:comment_id', () => {
+        const invalidMethods = ['get', 'put', 'post'];
+        const methodPromises = invalidMethods.map(method => {
+          return request(app)
+          [method]('/api/comments/1')
+            .expect(405)
+            .then(({ body }) => {
+              expect(body.msg).to.equal('Method not allowed!');
+            });
+        });
+        return Promise.all(methodPromises);
       });
     });
   });
