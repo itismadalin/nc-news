@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "setup-dbs": "psql -f ./db/setup.sql",
+    "start": "node listen.js",
     "migrate-make": "knex migrate:make",
     "migrate-latest": "knex migrate:latest",
     "migrate-rollback": "knex migrate:rollback",
@@ -28,6 +29,7 @@
     "express": "^4.17.1",
     "knex": "^0.19.0",
     "lodash": "^4.17.14",
+    "nodemon": "^1.19.1",
     "pg": "^7.11.0"
   },
   "devDependencies": {

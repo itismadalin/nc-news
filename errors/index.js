@@ -21,8 +21,8 @@ exports.handlePsqlErrors = (err, req, res, next) => {
     '22P02': { status: 400, msg: 'Invalid Entry' },
     '23503': { status: 404, msg: 'Input not found' },
     '42703': { status: 400, msg: 'Column Not Found' },
-    '23502': {status: 400, msg: 'Invalid Entry'},
-    '2201X': {status: 404, msg: 'Input not found'}
+    '23502': { status: 400, msg: 'Invalid Entry' },
+    '2201X': { status: 404, msg: 'Input not found' }
   };
   if (psqlBadRequestCodes[err.code])
     res

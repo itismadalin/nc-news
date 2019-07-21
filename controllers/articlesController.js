@@ -19,7 +19,8 @@ exports.sendUpdatedArticle = (req, res, next) => {
     updateArticle(article_id, points)
       .then((article) => {
         if (!article.length) {
-          next({article,
+          next({
+            article,
             status: 404,
             msg: `Article_id: ${article_id} not found`
           });

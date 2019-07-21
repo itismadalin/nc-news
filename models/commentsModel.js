@@ -1,27 +1,27 @@
-const connection = require("../db/connection");
+const connection = require('../db/connection');
 
 exports.insertComment = (article_id, username, body) => {
-    return connection("comments")
-        .returning("*")
+    return connection('comments')
+        .returning('*')
         .insert({ article_id: article_id, author: username, body: body });
 };
 
 exports.selectAllComments = (
     article_id,
-    { sort_by = "created_at", order = "desc" }
+    { sort_by = 'created_at', order = 'desc' }
 ) => {
     return connection
-        .select("*")
-        .from("comments")
-        .where("article_id", article_id)
+        .select('*')
+        .from('comments')
+        .where('article_id', article_id)
         .orderBy(sort_by, order)
-        .returning("*")
+        .returning('*')
         .then(commentsArray => {
             if (!commentsArray.length) {
                 return connection
-                    .select("*")
-                    .from("articles")
-                    .where("article_id", article_id)
+                    .select('*')
+                    .from('articles')
+                    .where('article_id', article_id)
                     .then(articleInfo => {
                         if (!articleInfo.length) {
                             return Promise.reject({
@@ -39,19 +39,19 @@ exports.selectAllComments = (
 
 exports.incrementVotes = (comment_id, points) => {
     return connection
-        .select("*")
-        .from("comments")
-        .where("comment_id", comment_id)
-        .increment("votes", points)
-        .returning("*");
+        .select('*')
+        .from('comments')
+        .where('comment_id', comment_id)
+        .increment('votes', points)
+        .returning('*');
 };
 
 exports.deleteComments = comment_id => {
     return connection
-        .select("*")
-        .from("comments")
-        .where("comment_id", comment_id)
-        .returning("*")
+        .select('*')
+        .from('comments')
+        .where('comment_id', comment_id)
+        .returning('*')
         .then(comments => {
             if (!comments.length) {
                 return Promise.reject({
@@ -59,8 +59,8 @@ exports.deleteComments = comment_id => {
                     msg: 'Comment_id: 100 not found'
                 });
             } else {
-                return connection("comments")
-                    .where("comment_id", comment_id)
+                return connection('comments')
+                    .where('comment_id', comment_id)
                     .del();
             }
         });

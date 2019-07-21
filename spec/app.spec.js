@@ -11,6 +11,8 @@ describe('/*', () => {
   after(() => connection.destroy());
   beforeEach(() => connection.seed.run());
 
+
+  //GENERAL WRONG ROUTE
   it('GET status 404 for a wrong route', () => {
     return request(app)
       .get('/wrongroute')
@@ -21,6 +23,8 @@ describe('/*', () => {
       });
   });
 
+
+  //API METHOD NOT ALLOWED  
   describe('/api', () => {
     it('Method not allowed: status 405', () => {
       const invalidMethods = ['patch', 'put', 'post', 'del'];
@@ -36,7 +40,18 @@ describe('/*', () => {
     });
   });
 
+
+  //TOPICS
   describe('/topics', () => {
+    it('GET status 200, returns an array of topics objects', () => {
+      return request(app)
+        .get('/api/topics')
+        .expect(200)
+        .then(({ body }) => {
+          expect(body.topics).to.be.an('Array');
+          expect(body.topics[0]).to.contain.keys('slug', 'description');
+        });
+    });
     it('Method not allowed: status 405 for /topics', () => {
       const invalidMethods = ['patch', 'put', 'post', 'del'];
       const methodPromises = invalidMethods.map(method => {
@@ -49,31 +64,11 @@ describe('/*', () => {
       });
       return Promise.all(methodPromises);
     });
-    it('GET status 200, returns an array of topics objects', () => {
-      return request(app)
-        .get('/api/topics')
-        .expect(200)
-        .then(({ body }) => {
-          expect(body.topics).to.be.an('Array');
-          expect(body.topics[0]).to.contain.keys('slug', 'description');
-        });
-    });
   });
 
+  //USERS
   describe('/users', () => {
     describe('/users/:username', () => {
-      it('Method not allowed: status 405 for /users/:username', () => {
-        const invalidMethods = ['patch', 'put', 'post', 'del'];
-        const methodPromises = invalidMethods.map(method => {
-          return request(app)
-          [method]('/api/users/rogersop')
-            .expect(405)
-            .then(({ body }) => {
-              expect(body.msg).to.equal('Method not allowed!');
-            });
-        });
-        return Promise.all(methodPromises);
-      });
       it('GET status 200, returns an user object by username', () => {
         return request(app)
           .get('/api/users/rogersop')
@@ -91,9 +86,22 @@ describe('/*', () => {
             expect(body.msg).to.equal('User not found');
           });
       });
+      it('Method not allowed: status 405 for /users/:username', () => {
+        const invalidMethods = ['patch', 'put', 'post', 'del'];
+        const methodPromises = invalidMethods.map(method => {
+          return request(app)
+          [method]('/api/users/rogersop')
+            .expect(405)
+            .then(({ body }) => {
+              expect(body.msg).to.equal('Method not allowed!');
+            });
+        });
+        return Promise.all(methodPromises);
+      });
     });
   });
 
+  //ARTICLES
   describe('/articles', () => {
     describe('/articles/:article_id', () => {
       it('GET status 200, returns an article object', () => {
@@ -112,6 +120,24 @@ describe('/*', () => {
               'comment_count'
             );
           });
+      }); 
+      it('GET a comment_count for the first article', () => {
+        return request(app)
+        .get('/api/articles/1')
+        .expect(200)
+        .then(({ body }) => {
+          expect(body.article).to.contain.keys(
+            'article_id',
+            'title',
+            'body',
+            'votes',
+            'topic',
+            'author',
+            'created_at',
+            'comment_count'
+          );
+          expect(body.article.comment_count).to.eql('13');
+        });
       });
       it('GET returns an article object with all the keys', () => {
         return request(app)
@@ -129,18 +155,6 @@ describe('/*', () => {
               'comment_count'
             );
           });
-      });
-      it('Method not allowed: status 405 for /articles', () => {
-        const invalidMethods = ['patch', 'put', 'post', 'del'];
-        const methodPromises = invalidMethods.map(method => {
-          return request(app)
-          [method]('/api/articles')
-            .expect(405)
-            .then(({ body }) => {
-              expect(body.msg).to.equal('Method not allowed!');
-            });
-        });
-        return Promise.all(methodPromises);
       });
       it('GET ERROR status 404 for an non-existing article', () => {
         return request(app)
@@ -160,7 +174,7 @@ describe('/*', () => {
       });
       it('PATCH returns 200 and the updated article', () => {
         return request(app)
-          .patch('/api/articles/2')
+          .patch('/api/articles/1')
           .send({ points: 1 })
           .expect(200)
           .then(({ body }) => {
@@ -173,6 +187,48 @@ describe('/*', () => {
               'created_at',
               'votes'
             );
+          });
+      });
+      it("PATCH returns status 200, ignores a `patch` request, and returns the unchanged article as a result", () => {
+        return request(app)
+          .patch('/api/articles/1')
+          .send({ points: '' })
+          .expect(200)
+          .then(({ body }) => {
+            expect(body.article[0]).to.contain.keys(
+              'author',
+              'title',
+              'article_id',
+              'topic',
+              'body',
+              'created_at',
+              'votes'
+            );
+          });
+      });
+      // it('PATCH returns 200 for successful `patch` requests', () => {
+      //   return request(app)
+      //     .patch('/api/articles/1')
+      //     .expect(200)
+      //     .then(({ body }) => {
+      //       console.log(body.article[0])
+      //       expect(body.article).to.contain.keys(
+      //         'author',
+      //         'title',
+      //         'article_id',
+      //         'topic',
+      //         'body',
+      //         'created_at'
+      //       );
+      //     });
+      // });
+      it('PATCH returns status 400 and a bad request error when points has a different key', () => {
+        return request(app)
+          .patch('/api/articles/1')
+          .send({ change_votes: 1 })
+          .expect(400)
+          .then(({ body }) => {
+            expect(body.msg).to.equal('Bad Request');
           });
       });
       it('PATCH ERROR returns 404 for an non-existing article ', () => {
@@ -201,15 +257,11 @@ describe('/*', () => {
             expect(body.msg).eql('Bad Request');
           });
       });
-
-    });
-
-    describe('/comments', () => {
-      it('Method not allowed: status 405 for /comments', () => {
-        const invalidMethods = ['get', 'put', 'post'];
+      it('Method not allowed: status 405 for /articles', () => {
+        const invalidMethods = ['put', 'post', 'del'];
         const methodPromises = invalidMethods.map(method => {
           return request(app)
-          [method]('/api/comments/1')
+          [method]('/api/articles')
             .expect(405)
             .then(({ body }) => {
               expect(body.msg).to.equal('Method not allowed!');
@@ -217,89 +269,7 @@ describe('/*', () => {
         });
         return Promise.all(methodPromises);
       });
-      it('POST respond with status 201 and a posted comment', () => {
-        return request(app)
-          .post('/api/articles/2/comments')
-          .send({
-            username: 'butter_bridge',
-            body: 'Im coming for you.'
-          })
-          .expect(201)
-          .then(({ body }) => {
-            expect(body.comment[0]).to.have.all.keys(
-              'article_id',
-              'author',
-              'body',
-              'comment_id',
-              'created_at',
-              'votes'
-            );
-          });
-      });
-      it('POST ERROR returns 404 when commenting on a non-existing article', () => {
-        return request(app)
-          .post('/api/articles/100/comments')
-          .send({
-            username: 'butter_bridge',
-            body: 'Im coming for you.'
-          })
-          .expect(404)
-          .then(({ body }) => {
-            expect(body.msg).to.equal('Input not found');
-          })
-      });
-      it('POST ERROR returns 400 when commenting on an article with a wrong format', () => {
-        return request(app)
-          .post('/api/articles/banana/comments')
-          .send({
-            username: 'theundertaker',
-            body: 'Im coming for you.'
-          })
-          .expect(400)
-          .then(({ body }) => {
-            expect(body.msg).to.equal('Invalid Entry');
-          })
-      });
-
-      it('POST ERROR returns 400 when commenting on an article with a correct path but wrong username', () => {
-        return request(app)
-          .post('/api/articles/1/comments')
-          .send({
-            username: 'theundertaker',
-            body: 'Im coming for you.'
-          })
-          .expect(404)
-          .then(({ body }) => {
-            expect(body.msg).to.equal('Input not found');
-          })
-      });
-
-      it('GET returns 200 and an empty array if the article has no comments', () => {
-        return request(app)
-          .get('/api/articles/2/comments')
-          .expect(200)
-          .then(({ body }) => {
-            expect(body.comments).to.eql([]);
-          });
-      });
-      it('GET returns 200 and an array sorted by created_at if no query is passed', () => {
-        return request(app)
-          .get('/api/articles/5/comments')
-          .expect(200)
-          .then(({ body }) => {
-            expect(body.comments).to.be.sortedBy('created_at', { descending: true });
-          });
-      });
-      it('GET returns 200 and an array sorted by a given variable if passed on as a query', () => {
-        return request(app)
-          .get('/api/articles/5/comments?sort_by=votes&order=asc')
-          .expect(200)
-          .then(({ body }) => {
-            expect(body.comments).to.be.sortedBy('votes', { descending: false });
-          });
-      });
     });
-
     describe('/api/articles', () => {
       it('GET returns 200 and an array with the correct keys', () => {
         return request(app)
@@ -342,27 +312,7 @@ describe('/*', () => {
             expect(body.msg).to.eql('Invalid Order');
           });
       });
-      it('GET ERROR returns 400 and filter an author with no articles', () => {
-        return request(app)
-          .get('/api/articles?author=notexisting')
-          .expect(400)
-          .then(({ body }) => {
-            expect(body.msg).to.eql(
-              'Author does not exist'
-            );
-          });
-      });
-      it('GET ERROR returns 400 and filter a topic with no articles', () => {
-        return request(app)
-          .get('/api/articles?topic=notexisting')
-          .expect(400)
-          .then(({ body }) => {
-            expect(body.msg).to.eql(
-              'Topic does not exist'
-            );
-          });
-      });
-      it('GET ERROR status 404 for an non-existing author', () => {
+      it('GET ERROR status 404 for a non-existing author', () => {
         return request(app)
           .get('/api/articles?author=not-an-author')
           .expect(404)
@@ -370,97 +320,213 @@ describe('/*', () => {
             expect(body.msg).to.eql('Author does not exist');
           });
       });
-      it('GET ERROR status 404 for an non-existing topic', () => {
+      it('GET ERROR status 404 for a non-existing topic', () => {
         return request(app)
-          .get('/api/articles/topic=not-a-topic')
+          .get('/api/articles?topic=not-a-topic')
           .expect(404)
           .then(({ body }) => {
             expect(body.msg).to.eql('Topic does not exist');
           });
       });
     });
+  });
 
-    describe('/api/comments/:comment_id', () => {
-      it('PATCH returns 200 and an updated comment', () => {
-        return request(app)
-          .patch('/api/comments/1')
-          .send({ points: 1 })
-          .expect(200)
-          .then(({ body }) => {
-            expect(body.comment[0]).to.have.all.keys(
-              'comment_id',
-              'author',
-              'article_id',
-              'votes',
-              'created_at',
-              'body'
-            );
-            expect(body.comment[0].votes).to.equal(17);
-          });
-      });
-      it('PATCH ERROR returns 400 if comment_id is wrong', () => {
-        return request(app)
-          .patch('/api/comments/banana')
-          .send({ points: 1 })
-          .expect(400)
-          .then(({ body }) => {
-            expect(body.msg).to.eql('Invalid Entry');
-          });
-      });
-      it('PATCH ERROR returns 404 if comment_id does not exist', () => {
-        return request(app)
-          .patch('/api/comments/100')
-          .send({ points: 1 })
-          .expect(404)
-          .then(({ body }) => {
-            expect(body.msg).to.eql('Comment_id: 100 not found');
-          });
-      });
-      it('PATCH ERROR returns 400 if there is no body on the request', () => {
-        return request(app)
-          .patch('/api/comments/1')
-          .expect(400)
-          .then(({ body }) => {
-            expect(body.msg).to.eql('Invalid Entry');
-          });
-      });
 
-      it('DELETE returns 204 and no content', () => {
+  //COMMENTS
+  describe('/comments', () => {
+    it('Method not allowed: status 405 for /comments', () => {
+      const invalidMethods = ['get', 'put', 'post'];
+      const methodPromises = invalidMethods.map(method => {
         return request(app)
-          .delete('/api/comments/1')
-          .expect(204)
+        [method]('/api/comments/1')
+          .expect(405)
           .then(({ body }) => {
-            expect(body).to.eql({});
+            expect(body.msg).to.equal('Method not allowed!');
           });
       });
-      it('DELETE ERROR returns 404 if the comment_id does not exist', () => {
-        return request(app)
-          .delete('/api/comments/100')
-          .expect(404)
-          .then(({ body }) => {
-            expect(body.msg).to.eql('Comment_id: 100 not found');
-          });
-      });
-      it('DELETE ERROR returns 400 if the comment_id has a wrong format', () => {
-        return request(app)
-          .delete('/api/comments/invalidentry')
-          .expect(400)
-          .then(({ body: { msg } }) => {
-            expect(msg).to.eql('Invalid Entry');
-          });
-      });
-      it('Method not allowed: status 405 for /comments/:comment_id', () => {
-        const invalidMethods = ['get', 'put', 'post'];
-        const methodPromises = invalidMethods.map(method => {
-          return request(app)
-          [method]('/api/comments/1')
-            .expect(405)
-            .then(({ body }) => {
-              expect(body.msg).to.equal('Method not allowed!');
-            });
+      return Promise.all(methodPromises);
+    });
+    it('POST respond with status 201 and a posted comment', () => {
+      return request(app)
+        .post('/api/articles/2/comments')
+        .send({
+          username: 'butter_bridge',
+          body: 'Im coming for you.'
+        })
+        .expect(201)
+        .then(({ body }) => {
+          expect(body.comment[0]).to.have.all.keys(
+            'article_id',
+            'author',
+            'body',
+            'comment_id',
+            'created_at',
+            'votes'
+          );
         });
-        return Promise.all(methodPromises);
+    });
+    it('POST ERROR returns 404 when commenting on a non-existing article', () => {
+      return request(app)
+        .post('/api/articles/100/comments')
+        .send({
+          username: 'butter_bridge',
+          body: 'Im coming for you.'
+        })
+        .expect(404)
+        .then(({ body }) => {
+          expect(body.msg).to.equal('Input not found');
+        })
+    });
+    it('POST ERROR returns 400 when commenting on an article with a wrong format', () => {
+      return request(app)
+        .post('/api/articles/banana/comments')
+        .send({
+          username: 'theundertaker',
+          body: 'Im coming for you.'
+        })
+        .expect(400)
+        .then(({ body }) => {
+          expect(body.msg).to.equal('Invalid Entry');
+        })
+    });
+    it('POST ERROR returns 404 when commenting on an article with a correct path but wrong username', () => {
+      return request(app)
+        .post('/api/articles/1/comments')
+        .send({
+          username: 'theundertaker',
+          body: 'Im coming for you.'
+        })
+        .expect(404)
+        .then(({ body }) => {
+          expect(body.msg).to.equal('Input not found');
+        })
+    });
+
+    it('GET returns 200 and an empty array if the article has no comments', () => {
+      return request(app)
+        .get('/api/articles/2/comments')
+        .expect(200)
+        .then(({ body }) => {
+          expect(body.comments).to.eql([]);
+        });
+    });
+    it('GET returns 200 and an array with 13 comments for article 1', () => {
+      return request(app)
+        .get('/api/articles/1/comments')
+        .expect(200)
+        .then(({ body }) => {
+          expect(body.comments.length).to.eql(13);
+        });
+    });
+    it('GET returns 200 and an array sorted by created_at if no query is passed', () => {
+      return request(app)
+        .get('/api/articles/5/comments')
+        .expect(200)
+        .then(({ body }) => {
+          expect(body.comments).to.be.sortedBy('created_at', { descending: true });
+        });
+    });
+    it('GET returns 200 and an array sorted by a given variable if passed on as a query', () => {
+      return request(app)
+        .get('/api/articles/5/comments?sort_by=votes&order=asc')
+        .expect(200)
+        .then(({ body }) => {
+          expect(body.comments).to.be.sortedBy('votes', { descending: false });
+        });
+    });
+    it('GET returns 200 and will sort the comments by votes, defaulted to DESC', () => {
+      return request(app)
+      .get('/api/articles/1/comments?sort_by=votes')
+      .expect(200)
+      .then(({ body }) => {
+        expect(body.comments).to.be.descendingBy('votes');
+        expect(body.comments[0].article_id).to.equal(1);
+        expect(body.comments.length).to.equal(13);
       });
+    });
+    
+  });
+  //PATCH COMMENTS
+  describe('/api/comments/:comment_id', () => {
+    it('PATCH returns 200 and an updated comment', () => {
+      return request(app)
+        .patch('/api/comments/1')
+        .send({ points: 1 })
+        .expect(200)
+        .then(({ body }) => {
+          expect(body.comment[0]).to.have.all.keys(
+            'comment_id',
+            'author',
+            'article_id',
+            'votes',
+            'created_at',
+            'body'
+          );
+          expect(body.comment[0].votes).to.equal(17);
+        });
+    });
+    it('PATCH ERROR returns 400 if comment_id is wrong', () => {
+      return request(app)
+        .patch('/api/comments/banana')
+        .send({ points: 1 })
+        .expect(400)
+        .then(({ body }) => {
+          expect(body.msg).to.eql('Invalid Entry');
+        });
+    });
+    it('PATCH ERROR returns 404 if comment_id does not exist', () => {
+      return request(app)
+        .patch('/api/comments/100')
+        .send({ points: 1 })
+        .expect(404)
+        .then(({ body }) => {
+          expect(body.msg).to.eql('Comment_id: 100 not found');
+        });
+    });
+    it('PATCH ERROR returns 400 if there is no body on the request', () => {
+      return request(app)
+        .patch('/api/comments/1')
+        .expect(400)
+        .then(({ body }) => {
+          expect(body.msg).to.eql('Invalid Entry');
+        });
+    });
+    //DELETE COMMENTS
+    it('DELETE returns 204 and no content', () => {
+      return request(app)
+        .delete('/api/comments/1')
+        .expect(204)
+        .then(({ body }) => {
+          expect(body).to.eql({});
+        });
+    });
+    it('DELETE ERROR returns 404 if the comment_id does not exist', () => {
+      return request(app)
+        .delete('/api/comments/100')
+        .expect(404)
+        .then(({ body }) => {
+          expect(body.msg).to.eql('Comment_id: 100 not found');
+        });
+    });
+    it('DELETE ERROR returns 400 if the comment_id has a wrong format', () => {
+      return request(app)
+        .delete('/api/comments/invalidentry')
+        .expect(400)
+        .then(({ body: { msg } }) => {
+          expect(msg).to.eql('Invalid Entry');
+        });
+    });
+    it('Method not allowed: status 405 for /comments/:comment_id', () => {
+      const invalidMethods = ['get', 'put', 'post'];
+      const methodPromises = invalidMethods.map(method => {
+        return request(app)
+        [method]('/api/comments/1')
+          .expect(405)
+          .then(({ body }) => {
+            expect(body.msg).to.equal('Method not allowed!');
+          });
+      });
+      return Promise.all(methodPromises);
     });
   });
 });

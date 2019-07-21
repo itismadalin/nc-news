@@ -18,13 +18,19 @@ exports.fetchArticleById = article_id => {
     });
 };
 
+
 exports.updateArticle = (article_id, points) => {
+  if (points === undefined) {
+    return Promise.reject({ status: 400, msg: 'Invalid Entry' });
+  } else if (typeof points !== 'number' && points.length < 1) {
+    points = 0;
+  }
   return connection
     .select('*')
     .from('articles')
     .where('article_id', article_id)
     .increment('votes', points)
-    .returning('*');
+    .returning('*')
 };
 
 exports.selectAllArticles = (
@@ -40,7 +46,7 @@ exports.selectAllArticles = (
     .leftJoin('comments', 'comments.article_id', 'articles.article_id')
     .groupBy('articles.article_id')
     .orderBy(sort_by, order)
-    .modify(function(queryBuilder) {
+    .modify(function (queryBuilder) {
       if (author && topic) {
         queryBuilder.where('articles.author', author);
       } else if (author) {
@@ -52,19 +58,13 @@ exports.selectAllArticles = (
     .then(articles => {
       if (!articles.length && author)
         return Promise.reject({
-          status: 400,
-          msg:
-            'Author does not exist'
-        });
-      else if (!articles.length && author)
-        return Promise.reject({
           status: 404,
           msg:
             'Author does not exist'
         });
-        else if (!articles.length && topic)
+      else if (!articles.length && topic)
         return Promise.reject({
-          status: 400,
+          status: 404,
           msg:
             'Topic does not exist'
         });

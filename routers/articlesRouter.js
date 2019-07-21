@@ -4,7 +4,7 @@ const {addComments, sendAllComments} = require('../controllers/commentsControlle
 const { methodNotAllowed } = require('../errors/index');
 
 articlesRouter.route("/").get(sendAllArticles).all(methodNotAllowed);
-articlesRouter.route("/:article_id").get(sendArticleById).patch(sendUpdatedArticle);
+articlesRouter.route("/:article_id").get(sendArticleById).patch(sendUpdatedArticle).all(methodNotAllowed);
 articlesRouter.route("/:article_id/comments").post(addComments).get(sendAllComments);
 
 module.exports = articlesRouter;
