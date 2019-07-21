@@ -56,7 +56,7 @@ exports.deleteComments = comment_id => {
             if (!comments.length) {
                 return Promise.reject({
                     status: 404,
-                    msg: 'Comment_id: 100 not found'
+                    msg: 'Comment not found'
                 });
             } else {
                 return connection('comments')

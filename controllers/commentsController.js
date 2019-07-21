@@ -5,10 +5,10 @@ exports.addComments = (req, res, next) => {
     const { article_id } = req.params;
     const { username } = req.body;
     const { body } = req.body;
-   
+
     if (article_id === undefined || username === undefined || body === undefined)
         next({ status: 400, msg: 'Invalid Entry' });
-   
+
     else if (Object.keys(req.body).length > 2)
         next({ status: 400, msg: 'Unexpected keys found' });
     else {
@@ -32,9 +32,9 @@ exports.sendAllComments = (req, res, next) => {
 exports.updateVotes = (req, res, next) => {
     const { comment_id } = req.params;
     const { points } = req.body;
-    
+
     if (points === undefined) next({ status: 400, msg: 'Invalid Entry' });
-    
+
     else if (Object.keys(req.body).length > 1)
         next({ status: 400, msg: 'body contains unexpected keys' });
     else {
@@ -43,7 +43,7 @@ exports.updateVotes = (req, res, next) => {
                 if (!updatedComment.length) {
                     next({
                         status: 404,
-                        msg: `Comment_id: ${comment_id} not found`
+                        msg: `Comment not found`
                     });
                 } else {
                     res.status(200).send({ comment: updatedComment });

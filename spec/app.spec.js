@@ -120,24 +120,24 @@ describe('/*', () => {
               'comment_count'
             );
           });
-      }); 
+      });
       it('GET a comment_count for the first article', () => {
         return request(app)
-        .get('/api/articles/1')
-        .expect(200)
-        .then(({ body }) => {
-          expect(body.article).to.contain.keys(
-            'article_id',
-            'title',
-            'body',
-            'votes',
-            'topic',
-            'author',
-            'created_at',
-            'comment_count'
-          );
-          expect(body.article.comment_count).to.eql('13');
-        });
+          .get('/api/articles/1')
+          .expect(200)
+          .then(({ body }) => {
+            expect(body.article).to.contain.keys(
+              'article_id',
+              'title',
+              'body',
+              'votes',
+              'topic',
+              'author',
+              'created_at',
+              'comment_count'
+            );
+            expect(body.article.comment_count).to.eql('13');
+          });
       });
       it('GET returns an article object with all the keys', () => {
         return request(app)
@@ -355,8 +355,7 @@ describe('/*', () => {
         })
         .expect(201)
         .then(({ body }) => {
-          expect(body.comment[0]).to.have.all.keys(
-            'article_id',
+          expect(body.comment[0]).to.contain.keys(
             'author',
             'body',
             'comment_id',
@@ -436,15 +435,22 @@ describe('/*', () => {
     });
     it('GET returns 200 and will sort the comments by votes, defaulted to DESC', () => {
       return request(app)
-      .get('/api/articles/1/comments?sort_by=votes')
-      .expect(200)
-      .then(({ body }) => {
-        expect(body.comments).to.be.descendingBy('votes');
-        expect(body.comments[0].article_id).to.equal(1);
-        expect(body.comments.length).to.equal(13);
-      });
+        .get('/api/articles/1/comments?sort_by=votes')
+        .expect(200)
+        .then(({ body }) => {
+          expect(body.comments).to.be.descendingBy('votes');
+          expect(body.comments[0].article_id).to.equal(1);
+          expect(body.comments.length).to.equal(13);
+        });
     });
-    
+    it('GET returns 200 and it will sort the comments in ASC order', () => {
+      return request(app)
+        .get('/api/articles/1/comments?order=asc')
+        .expect(200)
+        .then(({ body }) => {
+          expect(body.comments).to.be.ascendingBy('created_at');
+        });
+    });
   });
   //PATCH COMMENTS
   describe('/api/comments/:comment_id', () => {
@@ -465,6 +471,22 @@ describe('/*', () => {
           expect(body.comment[0].votes).to.equal(17);
         });
     });
+  //   it('PATCH returns 200 and IGNORE the patch request when points has no value, returning the unchanged article as a result', () => {
+  //     return request(app)
+  //     .patch('/api/comments/1')
+  //     .send({ points: '' })
+  //     .expect(200)
+  //     .then(({ body }) => {
+  //         expect(body.comment[0]).to.have.all.keys(
+  //             'comment_id',
+  //             'author',
+  //             'article_id',
+  //             'votes',
+  //             'created_at',
+  //             'body'
+  //           );
+  //     });
+  // });
     it('PATCH ERROR returns 400 if comment_id is wrong', () => {
       return request(app)
         .patch('/api/comments/banana')
@@ -476,11 +498,11 @@ describe('/*', () => {
     });
     it('PATCH ERROR returns 404 if comment_id does not exist', () => {
       return request(app)
-        .patch('/api/comments/100')
+        .patch('/api/comments/1000')
         .send({ points: 1 })
         .expect(404)
         .then(({ body }) => {
-          expect(body.msg).to.eql('Comment_id: 100 not found');
+          expect(body.msg).to.eql('Comment not found');
         });
     });
     it('PATCH ERROR returns 400 if there is no body on the request', () => {
@@ -505,7 +527,7 @@ describe('/*', () => {
         .delete('/api/comments/100')
         .expect(404)
         .then(({ body }) => {
-          expect(body.msg).to.eql('Comment_id: 100 not found');
+          expect(body.msg).to.eql('Comment not found');
         });
     });
     it('DELETE ERROR returns 400 if the comment_id has a wrong format', () => {
