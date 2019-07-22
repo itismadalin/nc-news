@@ -11,12 +11,12 @@ exports.sendArticleById = (req, res, next) => {
 
 exports.sendUpdatedArticle = (req, res, next) => {
   const { article_id } = req.params;
-  const { points } = req.body;
-  if (points === undefined) next({ status: 400, msg: 'Bad Request' });
+  const { inc_votes } = req.body;
+  if (inc_votes === undefined) next({ status: 400, msg: 'Bad Request' });
   else if (Object.keys(req.body).length > 1)
     next({ status: 400, msg: 'Unexpected keys' });
   else {
-    updateArticle(article_id, points)
+    updateArticle(article_id, inc_votes)
       .then((article) => {
         if (!article.length) {
           next({

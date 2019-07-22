@@ -5,6 +5,6 @@ const { methodNotAllowed } = require('../errors/index');
 
 articlesRouter.route("/").get(sendAllArticles).all(methodNotAllowed);
 articlesRouter.route("/:article_id").get(sendArticleById).patch(sendUpdatedArticle).all(methodNotAllowed);
-articlesRouter.route("/:article_id/comments").post(addComments).get(sendAllComments);
+articlesRouter.route("/:article_id/comments").post(addComments).get(sendAllComments).all(methodNotAllowed);
 
 module.exports = articlesRouter;

@@ -31,16 +31,16 @@ exports.sendAllComments = (req, res, next) => {
 
 exports.updateVotes = (req, res, next) => {
     const { comment_id } = req.params;
-    const { points } = req.body;
+    const { inc_votes } = req.body;
 
-    if (points === undefined) next({ status: 400, msg: 'Invalid Entry' });
+    if (inc_votes === undefined) next({ status: 400, msg: 'Invalid Entry' });
 
     else if (Object.keys(req.body).length > 1)
         next({ status: 400, msg: 'body contains unexpected keys' });
     else {
-        incrementVotes(comment_id, points)
-            .then(updatedComment => {
-                if (!updatedComment.length) {
+        incrementVotes(comment_id, inc_votes)
+            .then(([updatedComment]) => {
+                if (!updatedComment) {
                     next({
                         status: 404,
                         msg: `Comment not found`

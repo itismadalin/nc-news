@@ -19,17 +19,17 @@ exports.fetchArticleById = article_id => {
 };
 
 
-exports.updateArticle = (article_id, points) => {
-  if (points === undefined) {
+exports.updateArticle = (article_id, inc_votes = 0) => {
+  if (inc_votes === undefined) {
     return Promise.reject({ status: 400, msg: 'Invalid Entry' });
-  } else if (typeof points !== 'number' && points.length < 1) {
-    points = 0;
+  } else if (typeof inc_votes !== 'number' && inc_votes.length < 1) {
+    inc_votes = 0;
   }
   return connection
     .select('*')
     .from('articles')
     .where('article_id', article_id)
-    .increment('votes', points)
+    .increment('votes', inc_votes)
     .returning('*')
 };
 

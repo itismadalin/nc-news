@@ -175,7 +175,7 @@ describe('/*', () => {
       it('PATCH returns 200 and the updated article', () => {
         return request(app)
           .patch('/api/articles/1')
-          .send({ points: 1 })
+          .send({ inc_votes: 1 })
           .expect(200)
           .then(({ body }) => {
             expect(body.article[0]).to.contain.keys(
@@ -188,11 +188,23 @@ describe('/*', () => {
               'votes'
             );
           });
+      });
+      it('Method not allowed: status 405 for /users/:username', () => {
+        const invalidMethods = ['put', 'patch', 'del'];
+        const methodPromises = invalidMethods.map(method => {
+          return request(app)
+          [method]('/api/articles/1/comments')
+            .expect(405)
+            .then(({ body }) => {
+              expect(body.msg).to.equal('Method not allowed!');
+            });
+        });
+        return Promise.all(methodPromises);
       });
       it("PATCH returns status 200, ignores a `patch` request, and returns the unchanged article as a result", () => {
         return request(app)
           .patch('/api/articles/1')
-          .send({ points: '' })
+          .send({ inc_votes: '' })
           .expect(200)
           .then(({ body }) => {
             expect(body.article[0]).to.contain.keys(
@@ -206,23 +218,7 @@ describe('/*', () => {
             );
           });
       });
-      // it('PATCH returns 200 for successful `patch` requests', () => {
-      //   return request(app)
-      //     .patch('/api/articles/1')
-      //     .expect(200)
-      //     .then(({ body }) => {
-      //       console.log(body.article[0])
-      //       expect(body.article).to.contain.keys(
-      //         'author',
-      //         'title',
-      //         'article_id',
-      //         'topic',
-      //         'body',
-      //         'created_at'
-      //       );
-      //     });
-      // });
-      it('PATCH returns status 400 and a bad request error when points has a different key', () => {
+      it('PATCH returns status 400 and a bad request error when inc_votes has a different key', () => {
         return request(app)
           .patch('/api/articles/1')
           .send({ change_votes: 1 })
@@ -234,7 +230,7 @@ describe('/*', () => {
       it('PATCH ERROR returns 404 for an non-existing article ', () => {
         return request(app)
           .patch('/api/articles/100')
-          .send({ points: 1 })
+          .send({ inc_votes: 1 })
           .expect(404)
           .then(({ body }) => {
             expect(body.msg).to.eql('Article_id: 100 not found');
@@ -243,7 +239,7 @@ describe('/*', () => {
       it('PATCH ERROR returns 400 if article_id is wrong', () => {
         return request(app)
           .patch('/api/articles/banana')
-          .send({ points: 1 })
+          .send({ inc_votes: 1 })
           .expect(400)
           .then(({ body }) => {
             expect(body.msg).eql('Invalid Entry');
@@ -457,10 +453,10 @@ describe('/*', () => {
     it('PATCH returns 200 and an updated comment', () => {
       return request(app)
         .patch('/api/comments/1')
-        .send({ points: 1 })
+        .send({ inc_votes: 1 })
         .expect(200)
         .then(({ body }) => {
-          expect(body.comment[0]).to.have.all.keys(
+          expect(body.comment).to.have.all.keys(
             'comment_id',
             'author',
             'article_id',
@@ -468,38 +464,29 @@ describe('/*', () => {
             'created_at',
             'body'
           );
-          expect(body.comment[0].votes).to.equal(17);
+          expect(body.comment.votes).to.equal(17);
         });
     });
-  //   it('PATCH returns 200 and IGNORE the patch request when points has no value, returning the unchanged article as a result', () => {
-  //     return request(app)
-  //     .patch('/api/comments/1')
-  //     .send({ points: '' })
-  //     .expect(200)
-  //     .then(({ body }) => {
-  //         expect(body.comment[0]).to.have.all.keys(
-  //             'comment_id',
-  //             'author',
-  //             'article_id',
-  //             'votes',
-  //             'created_at',
-  //             'body'
-  //           );
-  //     });
-  // });
-    it('PATCH ERROR returns 400 if comment_id is wrong', () => {
-      return request(app)
-        .patch('/api/comments/banana')
-        .send({ points: 1 })
-        .expect(400)
-        .then(({ body }) => {
-          expect(body.msg).to.eql('Invalid Entry');
-        });
-    });
+    // it('PATCH returns 200 when sent a body with no `inc_votes` property', () => {
+    //   return request(app)
+    //     .patch('/api/comments/1')
+    //     .send({  })
+    //     .expect(200)
+    //     .then(({ body }) => {
+    //       expect(body.comments.votes).to.have.all.keys(
+    //         'comment_id',
+    //         'author',
+    //         'article_id',
+    //         'votes',
+    //         'created_at',
+    //         'body'
+    //       );
+    //     });
+    // });
     it('PATCH ERROR returns 404 if comment_id does not exist', () => {
       return request(app)
         .patch('/api/comments/1000')
-        .send({ points: 1 })
+        .send({ inc_votes: 1 })
         .expect(404)
         .then(({ body }) => {
           expect(body.msg).to.eql('Comment not found');
