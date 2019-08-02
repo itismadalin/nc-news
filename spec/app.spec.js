@@ -178,7 +178,7 @@ describe('/*', () => {
           .send({ inc_votes: 1 })
           .expect(200)
           .then(({ body }) => {
-            expect(body.article[0]).to.contain.keys(
+            expect(body.article).to.contain.keys(
               'author',
               'title',
               'article_id',
@@ -207,7 +207,7 @@ describe('/*', () => {
           .send({ inc_votes: '' })
           .expect(200)
           .then(({ body }) => {
-            expect(body.article[0]).to.contain.keys(
+            expect(body.article).to.contain.keys(
               'author',
               'title',
               'article_id',
@@ -351,7 +351,7 @@ describe('/*', () => {
         })
         .expect(201)
         .then(({ body }) => {
-          expect(body.comment[0]).to.contain.keys(
+          expect(body.comment).to.contain.keys(
             'author',
             'body',
             'comment_id',

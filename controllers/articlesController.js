@@ -6,8 +6,21 @@ exports.sendArticleById = (req, res, next) => {
     .then(article => {
       res.status(200).send({ article });
     })
-    .catch(err => next(err));
+    .catch(next);
 };
+//     .then(([article]) => {
+//       if (!article) {
+//         next({
+//           status: 404,
+//           msg: 'Article not found.'
+//         })
+//       } 
+//         else {
+//         res.status(200).send({ article });
+//       }
+//     })
+//     .catch(next);
+// };
 
 exports.sendUpdatedArticle = (req, res, next) => {
   const { article_id } = req.params;
@@ -17,8 +30,8 @@ exports.sendUpdatedArticle = (req, res, next) => {
     next({ status: 400, msg: 'Unexpected keys' });
   else {
     updateArticle(article_id, inc_votes)
-      .then((article) => {
-        if (!article.length) {
+      .then(([article]) => {
+        if (!article) {
           next({
             article,
             status: 404,

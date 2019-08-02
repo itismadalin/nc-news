@@ -13,7 +13,7 @@ exports.addComments = (req, res, next) => {
         next({ status: 400, msg: 'Unexpected keys found' });
     else {
         insertComment(article_id, username, body)
-            .then(insertedComment => {
+            .then(([insertedComment]) => {
                 res.status(201).send({ comment: insertedComment });
             })
             .catch(next);
@@ -43,7 +43,7 @@ exports.updateVotes = (req, res, next) => {
                 if (!updatedComment) {
                     next({
                         status: 404,
-                        msg: `Comment not found`
+                        msg: 'Comment not found'
                     });
                 } else {
                     res.status(200).send({ comment: updatedComment });

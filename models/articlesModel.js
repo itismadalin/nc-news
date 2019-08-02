@@ -8,7 +8,7 @@ exports.fetchArticleById = article_id => {
     .count('comments.article_id AS comment_count')
     .from('articles')
     .where('articles.article_id', article_id)
-    .then(article => {
+    .then((article) => {
       if (!article) {
         return Promise.reject({
           status: 404,
