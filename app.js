@@ -3,9 +3,11 @@ const app = express();
 const apiRouter = require('./routers/apiRouter');
 app.use(express.json());
 const { routeNotFound, handleCustomErrors, handlePsqlErrors, handleServerErrors } = require('./errors/index');
-
+let cors = require('cors');
 
 app.use('/api', apiRouter);
+
+app.use(cors());
 
 //handle errors
 app.use('/*', routeNotFound);
